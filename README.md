@@ -124,6 +124,26 @@ birdhub/
 
 ---
 
+## 🔄 Automatic Updates
+
+Your fork automatically stays updated with new BirdHub features!
+
+**How it works:**
+- A weekly GitHub Action syncs new features from the main repo
+- Your `data.json` (your birds) is **never touched**
+- New features like badges, themes, etc. just appear!
+
+**Files that auto-update:**
+- `index.html` (the app)
+- `scripts/fetch-ebird.js` (eBird sync)
+- `README.md` (documentation)
+
+**Files that are yours:**
+- `data.json` (your bird data)
+- Your GitHub Secrets (credentials)
+
+---
+
 ## 🛠️ Tech Stack
 
 - **D3.js** - Beautiful contribution graph
