@@ -74,6 +74,9 @@
     .home-footer { margin-top: 40px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
     .home-footer-link { font-size: 14px; font-weight: 600; color: var(--sky-600); text-decoration: none; cursor: pointer; transition: all 0.2s; }
     .home-footer-link:hover { color: var(--sky-500); }
+    .home-credit { margin-top: 60px; font-size: 13px; color: var(--sand-500); }
+    .home-credit a { color: var(--sand-600); text-decoration: none; font-weight: 600; }
+    .home-credit a:hover { color: var(--forest-600); }
 
     /* Profile */
     .profile-screen { display: none; padding: 30px 20px; }
@@ -117,9 +120,9 @@
     .month-label { fill: var(--sand-600); font-size: 11px; font-weight: 600; }
     .day-label { fill: var(--sand-500); font-size: 10px; }
     .contribution-cell { rx: 3; ry: 3; }
-    .contribution-cell.past { cursor: pointer; transition: all 0.15s; }
-    .contribution-cell.past:hover { stroke: var(--forest-600); stroke-width: 2; transform: scale(1.1); }
-    .contribution-cell.future { opacity: 0.3; }
+    .contribution-cell.past { cursor: pointer; }
+    .contribution-cell.past:hover { stroke: var(--sand-800); stroke-width: 1.5; }
+    .contribution-cell.future { opacity: 0.3; cursor: default; }
     .legend { display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-top: 10px; font-size: 12px; color: var(--sand-600); }
     .legend-cell { width: 12px; height: 12px; border-radius: 3px; }
 
@@ -216,7 +219,7 @@
       <p class="hero-subtitle">Transform your eBird life list into a beautiful visual journey</p>
     </div>
     <div class="upload-zone" id="uploadZone">
-      <div class="upload-icon">🪺</div>
+      <div class="upload-icon">📂</div>
       <div class="upload-text">Drop your eBird CSV here</div>
       <div class="upload-hint">or click to browse your files</div>
       <a href="https://ebird.org/lifelist?r=world&time=life&fmt=csv" target="_blank" class="upload-link">📥 Get your life list from eBird</a>
@@ -225,6 +228,9 @@
     <div class="home-footer">
       <span class="home-footer-link" onclick="showScreen('directory')">🌍 Explore the flock</span>
       <a href="https://github.com/jacobjameson/birdhub#auto-sync-setup" target="_blank" class="home-footer-link">✨ Create your own auto-updating profile</a>
+    </div>
+    <div class="home-credit">
+      Created by <a href="https://github.com/jacobjameson" target="_blank">Jacob Jameson</a>
     </div>
   </div>
 
@@ -340,7 +346,7 @@
       document.getElementById('directoryScreen').classList.remove('visible');
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       if (screen === 'home') { document.getElementById('homeScreen').classList.remove('hidden'); document.getElementById('navHome').classList.add('active'); }
-      else if (screen === 'profile') { document.getElementById('profileScreen').classList.add('visible'); const mp = document.getElementById('navMyProfile'); if (mp && isHostedProfile) mp.classList.add('active'); else document.getElementById('navHome').classList.add('active'); }
+      else if (screen === 'profile') { document.getElementById('profileScreen').classList.add('visible'); document.getElementById('navHome').classList.add('active'); }
       else if (screen === 'directory') { document.getElementById('directoryScreen').classList.add('visible'); document.getElementById('navDirectory').classList.add('active'); loadDirectory(); }
     }
 
@@ -362,9 +368,18 @@
       
       directoryData.forEach((b,i) => {
         const card = document.createElement('a'); 
-        card.className = 'birder-card'; 
-        card.href = b.profileUrl || `https://${b.username}.github.io/birdhub`; 
-        card.target = '_blank';
+        card.className = 'birder-card';
+        
+        // If this is the hosted profile, load it in-app
+        const isMe = hostedData && profileConfig && b.username === profileConfig.username;
+        if (isMe) {
+          card.href = '#';
+          card.onclick = (e) => { e.preventDefault(); loadHostedProfile(); };
+        } else {
+          card.href = b.profileUrl || `https://${b.username}.github.io/birdhub`; 
+          card.target = '_blank';
+        }
+        
         const rankBadge = i < 3 ? `<span class="birder-rank">${['🥇','🥈','🥉'][i]} #${i+1}</span>` : '';
         card.innerHTML = `
           <div class="birder-avatar">🐦</div>
@@ -549,14 +564,6 @@
           if (data.observations && data.observations.length) {
             hostedData = data;
             profileConfig = data.profile || {};
-            const navLinks = document.querySelector('.nav-links');
-            const myProfileLink = document.createElement('a');
-            myProfileLink.href = '#';
-            myProfileLink.className = 'nav-link';
-            myProfileLink.id = 'navMyProfile';
-            myProfileLink.textContent = '👤 ' + (profileConfig.name || 'My Profile');
-            myProfileLink.onclick = (e) => { e.preventDefault(); loadHostedProfile(); };
-            navLinks.insertBefore(myProfileLink, navLinks.firstChild.nextSibling);
             return true;
           }
         }
