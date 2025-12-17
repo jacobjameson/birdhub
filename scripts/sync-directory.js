@@ -18,13 +18,13 @@ const BIRDER_REGISTRY = [
     name: "Jacob Jameson",
     github: "jacobjameson",
     location: "Cambridge, MA",
-    // Data will be fetched from: https://jacobjameson.github.io/big_year/data.json
+    // Data will be fetched from: https://jacobjameson.github.io/birdhub/data.json
   },
   // Add more birders here!
 ];
 
 async function fetchBirderData(username) {
-  const url = `https://${username}.github.io/big_year/data.json`;
+  const url = `https://${username}.github.io/birdhub/data.json`;
   
   try {
     const response = await fetch(url, {
@@ -79,7 +79,7 @@ async function syncDirectory() {
       name: birder.name,
       github: birder.github,
       location: birder.location || null,
-      profileUrl: `https://${birder.username}.github.io/big_year`,
+      profileUrl: `https://${birder.username}.github.io/birdhub`,
       species: stats.species,
       observations: stats.observations,
       lastSighting: stats.lastSighting,

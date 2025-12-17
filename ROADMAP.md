@@ -1,6 +1,6 @@
-# 🗺️ Big Year Roadmap
+# 🗺️ BirdHub Roadmap
 
-This document outlines the vision for Big Year's evolution from a simple visualization tool to a full birding social platform.
+This document outlines the vision for BirdHub's evolution from a simple visualization tool to a full birding social platform.
 
 ---
 

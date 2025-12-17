@@ -1,4 +1,4 @@
-# Contributing to Big Year
+# Contributing to BirdHub
 
 Thanks for your interest in contributing! 🐦
 

@@ -1,107 +1,88 @@
-# 🐦 Big Year
+# 🐦 BirdHub
 
-A GitHub-style contribution graph for birders. Track your life list like you track your code commits.
+A beautiful way to visualize and share your birding journey. Like GitHub for birders!
 
-**[View Live Demo →](https://jacobjameson.github.io/big_year)**
+**[🌐 Live Demo →](https://jacobjameson.github.io/birdhub)**
 
 ---
 
-## Two Ways to Use Big Year
+## ✨ Features
 
-### 🚀 Quick Visualization (No Setup)
+- 📊 **GitHub-style contribution graph** for your bird sightings
+- 🌍 **Flock directory** - see other birders and their stats
+- 🔄 **Auto-sync** - your profile updates daily from eBird
+- 📸 **Export** - download beautiful PNG images to share
+- 📱 **Mobile-friendly** - looks great on any device
 
-Just want to see your data visualized? 
+---
 
-1. Go to [jacobjameson.github.io/big_year](https://jacobjameson.github.io/big_year)
+## 🚀 Quick Start
+
+### Just want to visualize your data?
+
+1. Visit [jacobjameson.github.io/birdhub](https://jacobjameson.github.io/birdhub)
 2. Download your life list from [eBird](https://ebird.org/lifelist?r=world&time=life&fmt=csv)
-3. Upload the CSV
-4. Export as PNG to share!
+3. Drop the CSV on the page
+4. Export as PNG and share! 🎉
 
 ---
 
-### 🔄 Auto-Sync Setup (Recommended)
+## 🔄 Auto-Sync Setup
 
-Want your profile to **update automatically every day**? Set up auto-sync with your eBird credentials!
+Want your own profile that updates automatically every day? Here's how:
 
-#### Step 1: Fork the Repository
+### Step 1: Fork the Repository
 
-1. Click **[Fork](https://github.com/jacobjameson/big_year/fork)** to create your own copy
-2. Enable GitHub Pages:
-   - Go to **Settings** → **Pages**
-   - Source: **Deploy from a branch**
-   - Branch: **main** / **(root)**
-   - Click **Save**
+Click **[Fork](https://github.com/jacobjameson/birdhub/fork)** to create your own copy.
 
-#### Step 2: Add Your eBird Credentials
+### Step 2: Add Your eBird Credentials
 
 Your credentials are stored securely as GitHub Secrets (encrypted, never visible).
 
-1. Go to your forked repo's **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret**
-3. Add two secrets:
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Add two secrets:
 
 | Name | Value |
 |------|-------|
-| `EBIRD_USERNAME` | Your eBird email/username |
+| `EBIRD_USERNAME` | Your eBird email |
 | `EBIRD_PASSWORD` | Your eBird password |
 
-⚠️ **Security Note:** GitHub Secrets are encrypted and never exposed in logs. Only GitHub Actions can access them.
+### Step 3: Update Your Profile
 
-#### Step 3: Customize Your Profile
+Edit `data.json` and update the profile section:
 
-Edit `index.html` and update the `profileConfig`:
-
-```javascript
-const profileConfig = {
-  name: "Your Name",
-  username: "your-github-username",
-  bio: "Your birding bio here",
-  avatarEmoji: "🦅",  // 🐦 🦆 🦉 🦜
-  github: "your-github-username",
-  location: "City, State"
-};
+```json
+{
+  "profile": {
+    "name": "Your Name",
+    "username": "your-github-username",
+    "github": "your-github-username",
+    "location": "City, State"
+  }
+}
 ```
 
-#### Step 4: Run the Sync
+### Step 4: Enable GitHub Pages
 
-The sync runs automatically every day at 7am UTC. To run it immediately:
+1. Go to **Settings** → **Pages**
+2. Source: **Deploy from a branch**
+3. Branch: **main** / **(root)**
+4. Click **Save**
 
-1. Go to **Actions** tab in your repo
-2. Click **Sync eBird Life List**
-3. Click **Run workflow** → **Run workflow**
+### Step 5: You're Done! 🎉
 
-#### Step 5: View Your Profile!
+Your profile is live at: `https://your-username.github.io/birdhub`
 
-Your profile is live at: `https://your-username.github.io/big_year`
+The GitHub Action syncs your eBird data daily at 7am UTC.
 
 ---
 
-## How Auto-Sync Works
+## 🌍 Join the Flock
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   YOUR FORKED REPO                          │
-│                                                             │
-│  GitHub Action runs daily at 7am UTC                       │
-│  ↓                                                          │
-│  Uses Playwright to:                                        │
-│    1. Log into eBird with your credentials                 │
-│    2. Download your life list CSV                          │
-│    3. Convert to data.json                                 │
-│    4. Commit the update                                    │
-│  ↓                                                          │
-│  Your profile automatically shows latest birds!            │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Join the Directory
-
-Want to appear in the [Birder Directory](https://jacobjameson.github.io/big_year/#directory)?
+Want to appear in the [Birder Directory](https://jacobjameson.github.io/birdhub)?
 
 1. Complete the auto-sync setup above
-2. In the **main repo** (not your fork), edit `scripts/sync-directory.js`
+2. Edit `scripts/sync-directory.js` in the **main repo**
 3. Add yourself to `BIRDER_REGISTRY`:
 
 ```javascript
@@ -113,94 +94,63 @@ Want to appear in the [Birder Directory](https://jacobjameson.github.io/big_year
 }
 ```
 
-4. Submit a Pull Request
-
-The main repo fetches everyone's `data.json` daily and updates the directory!
+4. Submit a Pull Request!
 
 ---
 
-## File Structure
+## 📁 Project Structure
 
 ```
-big_year/
-├── index.html                          # Main app
-├── data.json                           # Your bird data (auto-generated)
+birdhub/
+├── index.html              # Main app
+├── data.json               # Your bird data
 ├── data/
-│   └── directory.json                  # Aggregated birder directory
+│   └── directory.json      # Flock directory
 ├── scripts/
-│   ├── fetch-ebird.js                  # eBird scraper (Playwright)
-│   └── sync-directory.js               # Directory aggregator
-├── .github/workflows/
-│   ├── sync-ebird.yml                  # Daily eBird sync
-│   └── sync-directory.yml              # Daily directory sync
-└── README.md
+│   ├── fetch-ebird.js      # eBird scraper
+│   └── sync-directory.js   # Directory sync
+└── .github/workflows/
+    ├── sync-ebird.yml      # Daily eBird sync
+    └── sync-directory.yml  # Daily directory sync
 ```
 
 ---
 
-## Troubleshooting
+## 🔒 Privacy & Security
 
-### Sync failed?
-
-1. Check **Actions** tab for error logs
-2. Verify your eBird credentials are correct
-3. Make sure 2FA isn't blocking the login
-4. Check if eBird's website changed (open an issue!)
-
-### Profile not updating?
-
-- Make sure GitHub Pages is enabled
-- Check that `data.json` was committed
-- Wait a few minutes for Pages to deploy
-
-### Want to sync manually?
-
-Go to **Actions** → **Sync eBird Life List** → **Run workflow**
+- ✅ Credentials are **encrypted** as GitHub Secrets
+- ✅ Your data stays in **your repo**
+- ✅ **Open source** - review the code yourself!
 
 ---
 
-## Privacy & Security
+## 🛠️ Tech Stack
 
-- **Credentials are encrypted** - GitHub Secrets are never exposed
-- **Data stays in your repo** - We don't collect or store your data
-- **Open source** - Review the code yourself!
-
----
-
-## Roadmap
-
-See [ROADMAP.md](ROADMAP.md) for planned features:
-- [ ] eBird API integration (when available)
-- [ ] Achievements & badges
-- [ ] Following other birders
-- [ ] Activity feeds
-
----
-
-## Tech Stack
-
-- **D3.js** - Contribution graph
-- **Playwright** - eBird scraping
+- **D3.js** - Beautiful contribution graph
+- **Playwright** - eBird data fetching
 - **PapaParse** - CSV parsing
 - **html2canvas** - PNG export
-- **GitHub Actions** - Automated sync
 
 ---
 
-## Contributing
+## 💚 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). We'd love help with:
+We'd love your help! Check out [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Ideas welcome:
 - 🐛 Bug fixes
-- ✨ New features  
+- ✨ New features
+- 🎨 Design improvements
 - 📖 Documentation
-- 🎨 UI improvements
 
 ---
 
-## License
+## 📄 License
 
-MIT License - Fork it, customize it, make it yours!
+MIT - Fork it, customize it, make it yours!
 
 ---
 
-*"Look deep into nature, and then you will understand everything better."* — Albert Einstein
+<p align="center">
+  <i>Happy birding! 🐦🌿</i>
+</p>
