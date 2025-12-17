@@ -187,9 +187,11 @@
     .modal-input:focus { border-color: var(--forest-500); }
     .modal-actions { display: flex; gap: 10px; justify-content: center; }
     .share-actions { display: flex; flex-direction: column; gap: 10px; }
-    .share-btn { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 2px solid var(--sand-200); border-radius: 12px; background: white; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s; text-decoration: none; color: var(--sand-700); }
+    .share-btn { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 2px solid var(--sand-200); border-radius: 12px; background: white; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s; text-decoration: none; color: var(--sand-700); font-family: inherit; width: 100%; text-align: left; }
     .share-btn:hover { border-color: var(--forest-400); background: var(--forest-50); }
-    .share-btn-icon { font-size: 22px; }
+    .share-btn-icon { font-size: 22px; flex-shrink: 0; }
+    .share-btn div { line-height: 1.4; }
+    .share-btn strong { color: var(--forest-600); }
 
     @media (max-width: 640px) {
       .profile-header { flex-direction: column; align-items: center; text-align: center; }
@@ -322,8 +324,17 @@
         <div class="modal-title">Share your profile</div>
       </div>
       <div class="share-actions">
-        <a href="#" class="share-btn" id="shareTwitter" target="_blank"><span class="share-btn-icon">𝕏</span> Share on X</a>
-        <button class="share-btn" onclick="exportPNG(); closeModal('shareModal');"><span class="share-btn-icon">📸</span> Download Image</button>
+        <button class="share-btn" id="shareDownloadFirst" onclick="exportPNG();" style="display:none;">
+          <span class="share-btn-icon">📸</span> 
+          <div><strong>Step 1:</strong> Download your image</div>
+        </button>
+        <a href="#" class="share-btn" id="shareTwitter" target="_blank">
+          <span class="share-btn-icon">𝕏</span> 
+          <span id="shareTwitterText">Share on X</span>
+        </a>
+        <button class="share-btn" id="shareDownloadOnly" onclick="exportPNG(); closeModal('shareModal');">
+          <span class="share-btn-icon">📸</span> Download Image
+        </button>
       </div>
       <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--sand-100);" id="shareAutoSyncHint">
         <p style="font-size:13px;color:var(--sand-600);margin-bottom:12px;text-align:center;">Want to join the flock?</p>
@@ -420,7 +431,12 @@
     function processFile(file) {
       Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => {
         const data = parseEbirdData(r.data);
-        if (data.length) { pendingData = data; isHostedProfile = false; showNameModal(); }
+        if (data.length) { 
+          pendingData = data; 
+          isHostedProfile = false; 
+          profileConfig = null; // Clear any hosted profile config
+          showNameModal(); 
+        }
         else alert('Hmm, couldn\'t read that CSV. Make sure it\'s from eBird with Date, Scientific Name, and Common Name columns!');
       }, error: e => alert('Oops! ' + e.message) });
     }
@@ -543,15 +559,52 @@
 
     function openShareModal() {
       const species = new Set(observations.map(o => o.sciName)).size;
-      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I've spotted ${species} bird species! 🐦 Check out my BirdHub profile`)}&url=${encodeURIComponent(window.location.href)}`;
+      const downloadFirst = document.getElementById('shareDownloadFirst');
+      const downloadOnly = document.getElementById('shareDownloadOnly');
+      const twitterText = document.getElementById('shareTwitterText');
+      const twitterLink = document.getElementById('shareTwitter');
+      
+      if (isHostedProfile) {
+        // Hosted profile: just link to their page
+        downloadFirst.style.display = 'none';
+        downloadOnly.style.display = 'flex';
+        twitterText.textContent = 'Share on X';
+        twitterLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I've spotted ${species} bird species! 🐦 Check out my BirdHub profile`)}&url=${encodeURIComponent(window.location.href)}`;
+      } else {
+        // CSV upload: encourage downloading image first, then sharing
+        downloadFirst.style.display = 'flex';
+        downloadOnly.style.display = 'none';
+        twitterText.innerHTML = '<div><strong>Step 2:</strong> Share on X (attach your image!)</div>';
+        twitterLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I've spotted ${species} bird species! 🐦 Made with BirdHub`)}`;
+      }
+      
       document.getElementById('shareModal').classList.add('visible');
     }
     function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
     function exportPNG() {
-      const a = document.querySelector('.profile-actions'); a.style.display = 'none';
-      html2canvas(document.getElementById('profileContainer'), {backgroundColor:'#f0fdf4',scale:2}).then(canvas => {
-        const link = document.createElement('a'); link.download = `birdhub-${selectedYear}.png`; link.href = canvas.toDataURL('image/png'); link.click(); a.style.display = 'flex';
-      }).catch(() => a.style.display = 'flex');
+      const profileCard = document.querySelector('.profile-card');
+      const graphCard = document.querySelector('.graph-card');
+      const actions = document.querySelector('.profile-actions');
+      actions.style.display = 'none';
+      
+      // Create a temporary container with just profile and graph
+      const tempContainer = document.createElement('div');
+      tempContainer.style.cssText = 'padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border-radius: 20px;';
+      tempContainer.appendChild(profileCard.cloneNode(true));
+      tempContainer.appendChild(graphCard.cloneNode(true));
+      document.body.appendChild(tempContainer);
+      
+      html2canvas(tempContainer, {backgroundColor: null, scale: 2}).then(canvas => {
+        const link = document.createElement('a'); 
+        link.download = `birdhub-${selectedYear}.png`; 
+        link.href = canvas.toDataURL('image/png'); 
+        link.click(); 
+        actions.style.display = 'flex';
+        document.body.removeChild(tempContainer);
+      }).catch(() => {
+        actions.style.display = 'flex';
+        document.body.removeChild(tempContainer);
+      });
     }
     document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal('nameModal'); closeModal('shareModal'); } });
