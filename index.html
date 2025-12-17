@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Year | Birding Profile</title>
+  <meta name="description" content="Track your birding life list like GitHub tracks code commits">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-canvas-default: #ffffff;
+      --color-canvas-subtle: #f6f8fa;
+      --color-canvas-inset: #eff2f5;
+      --color-border-default: #d0d7de;
+      --color-border-muted: #d8dee4;
+      --color-fg-default: #1f2328;
+      --color-fg-muted: #656d76;
+      --color-fg-subtle: #6e7781;
+      --color-accent-fg: #0969da;
+      --color-accent-emphasis: #0969da;
+      --color-success-fg: #1a7f37;
+      --color-success-emphasis: #1f883d;
+      --color-calendar-graph-day-bg: #ebedf0;
+      --color-calendar-graph-day-L1-bg: #9be9a8;
+      --color-calendar-graph-day-L2-bg: #40c463;
+      --color-calendar-graph-day-L3-bg: #30a14e;
+      --color-calendar-graph-day-L4-bg: #216e39;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-canvas-subtle);
+      color: var(--color-fg-default);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .nav {
+      background: var(--color-canvas-default);
+      border-bottom: 1px solid var(--color-border-default);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--color-fg-default);
+      text-decoration: none;
+    }
+
+    .nav-links { display: flex; gap: 4px; }
+
+    .nav-link {
+      padding: 6px 12px;
+      font-size: 14px;
+      color: var(--color-fg-muted);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .nav-link:hover { background: var(--color-canvas-subtle); color: var(--color-fg-default); }
+    .nav-link.active { background: var(--color-canvas-subtle); color: var(--color-fg-default); font-weight: 500; }
+
+    .home-screen {
+      min-height: calc(100vh - 65px);
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .home-screen.hidden { display: none; }
+
+    .hero { text-align: center; margin-bottom: 48px; }
+    .hero-logo { font-size: 72px; margin-bottom: 16px; }
+    .hero-title { font-size: 42px; font-weight: 600; margin-bottom: 12px; }
+    .hero-subtitle { font-size: 18px; color: var(--color-fg-muted); max-width: 500px; margin: 0 auto; }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .option-card {
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .option-card:hover {
+      border-color: var(--color-accent-fg);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .option-icon { font-size: 48px; margin-bottom: 16px; }
+    .option-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .option-desc { font-size: 14px; color: var(--color-fg-muted); margin-bottom: 20px; line-height: 1.6; }
+
+    .option-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .option-btn-primary {
+      background: var(--color-accent-emphasis);
+      color: white;
+      border: 1px solid var(--color-accent-emphasis);
+    }
+
+    .option-btn-primary:hover { background: #0860ca; }
+
+    .option-btn-secondary {
+      background: var(--color-canvas-subtle);
+      color: var(--color-fg-default);
+      border: 1px solid var(--color-border-default);
+    }
+
+    .option-btn-secondary:hover { background: var(--color-canvas-inset); }
+
+    .option-upload { display: none; }
+
+    .browse-link {
+      margin-top: 32px;
+      font-size: 14px;
+      color: var(--color-accent-fg);
+      cursor: pointer;
+    }
+
+    .browse-link:hover { text-decoration: underline; }
+
+    .profile-screen { display: none; padding: 24px 20px; }
+    .profile-screen.visible { display: block; }
+    .profile-container { max-width: 900px; margin: 0 auto; }
+
+    .profile-header { display: flex; gap: 24px; margin-bottom: 24px; }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #40c463, #216e39);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      border: 1px solid var(--color-border-default);
+      flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; }
+    .profile-name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+    .profile-name { font-size: 24px; font-weight: 600; }
+
+    .profile-badge {
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 12px;
+      background: var(--color-calendar-graph-day-L1-bg);
+      color: var(--color-success-fg);
+    }
+
+    .profile-username { font-size: 18px; color: var(--color-fg-muted); margin-bottom: 8px; }
+    .profile-bio { font-size: 14px; color: var(--color-fg-muted); margin-bottom: 12px; max-width: 480px; }
+
+    .profile-links { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+
+    .profile-link {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--color-fg-muted);
+      text-decoration: none;
+    }
+
+    .profile-link:hover { color: var(--color-accent-fg); }
+    .profile-link svg { width: 16px; height: 16px; }
+
+    .stats-row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .stat { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--color-fg-muted); }
+    .stat-value { font-weight: 600; color: var(--color-fg-default); }
+
+    .profile-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      border: 1px solid var(--color-border-default);
+      background: var(--color-canvas-subtle);
+      color: var(--color-fg-default);
+    }
+
+    .btn:hover { background: var(--color-canvas-inset); }
+
+    .btn-success {
+      background: var(--color-success-emphasis);
+      color: white;
+      border-color: var(--color-success-emphasis);
+    }
+
+    .btn-success:hover { background: #1a7f37; }
+
+    .contribution-section {
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-size: 14px; color: var(--color-fg-default); }
+    .section-title strong { font-weight: 600; }
+    .year-selector { display: flex; gap: 4px; }
+
+    .year-btn {
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      background: var(--color-canvas-default);
+      color: var(--color-fg-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .year-btn:hover { background: var(--color-canvas-subtle); }
+    .year-btn.active { background: var(--color-accent-emphasis); color: white; border-color: var(--color-accent-emphasis); }
+
+    .graph-wrapper { overflow-x: auto; padding: 8px 0; }
+    .contribution-graph { display: block; }
+    .month-label { fill: var(--color-fg-muted); font-size: 10px; }
+    .day-label { fill: var(--color-fg-muted); font-size: 9px; }
+    
+    .contribution-cell { rx: 2; ry: 2; }
+    .contribution-cell.past { cursor: pointer; }
+    .contribution-cell.past:hover { stroke: var(--color-fg-default); stroke-width: 1.5; }
+    .contribution-cell.future { opacity: 0.3; cursor: default; }
+
+    .legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 8px; font-size: 11px; color: var(--color-fg-muted); }
+    .legend-cell { width: 10px; height: 10px; border-radius: 2px; }
+    .learn-link { font-size: 11px; color: var(--color-accent-fg); text-decoration: none; margin-right: auto; }
+
+    .tooltip {
+      position: fixed;
+      background: var(--color-fg-default);
+      color: white;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    .tooltip.visible { opacity: 1; }
+    .tooltip-count { font-weight: 600; margin-bottom: 2px; }
+    .tooltip-date { opacity: 0.8; font-size: 11px; }
+    .tooltip-birds { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); }
+    .tooltip-bird { margin-bottom: 4px; }
+    .bird-common { color: #9be9a8; font-weight: 500; }
+    .bird-sci { font-style: italic; opacity: 0.7; font-size: 11px; }
+
+    .activity-section {
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .activity-header { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .activity-month { font-size: 13px; font-weight: 600; margin: 16px 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border-muted); }
+    .activity-month:first-of-type { margin-top: 0; }
+    .activity-item { display: flex; gap: 12px; padding: 10px 0; font-size: 13px; }
+
+    .activity-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-canvas-subtle);
+      border: 1px solid var(--color-border-default);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .activity-content { flex: 1; }
+    .activity-title { margin-bottom: 2px; }
+    .activity-details { color: var(--color-fg-muted); font-size: 12px; }
+
+    .directory-screen { display: none; padding: 24px 20px; }
+    .directory-screen.visible { display: block; }
+    .directory-container { max-width: 900px; margin: 0 auto; }
+    .directory-header { margin-bottom: 24px; }
+    .directory-header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    .directory-header p { color: var(--color-fg-muted); font-size: 14px; }
+    .directory-header a { color: var(--color-accent-fg); }
+
+    .directory-stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 8px;
+    }
+
+    .directory-stat { text-align: center; }
+    .directory-stat-value { font-size: 24px; font-weight: 600; color: var(--color-success-fg); }
+    .directory-stat-label { font-size: 12px; color: var(--color-fg-muted); }
+
+    .directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .birder-card {
+      background: var(--color-canvas-default);
+      border: 1px solid var(--color-border-default);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .birder-card:hover { border-color: var(--color-accent-fg); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+    .birder-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #40c463, #216e39);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .birder-info { flex: 1; min-width: 0; }
+    .birder-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .birder-username { font-size: 12px; color: var(--color-fg-muted); margin-bottom: 4px; }
+    .birder-stats { font-size: 12px; color: var(--color-fg-muted); }
+    .birder-stats strong { color: var(--color-fg-default); }
+    .birder-rank { font-size: 11px; color: var(--color-success-fg); font-weight: 500; }
+
+    .last-updated { margin-top: 24px; font-size: 12px; color: var(--color-fg-subtle); text-align: center; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--color-canvas-default);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 480px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--color-fg-muted); line-height: 1; }
+
+    .modal-section { margin-bottom: 20px; }
+    .modal-section:last-child { margin-bottom: 0; }
+    .modal-section-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .modal-section p { font-size: 13px; color: var(--color-fg-muted); margin-bottom: 12px; }
+
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+
+    .modal-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--color-border-default);
+      border-radius: 8px;
+      background: var(--color-canvas-default);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+      text-decoration: none;
+      color: var(--color-fg-default);
+    }
+
+    .modal-btn:hover { background: var(--color-canvas-subtle); border-color: var(--color-accent-fg); }
+    .modal-btn-icon { font-size: 20px; }
+
+    @media (max-width: 640px) {
+      .profile-header { flex-direction: column; align-items: center; text-align: center; }
+      .profile-links { justify-content: center; }
+      .stats-row { justify-content: center; }
+      .profile-actions { justify-content: center; }
+      .nav-links { gap: 2px; }
+      .nav-link { padding: 6px 8px; font-size: 13px; }
+      .hero-title { font-size: 32px; }
+      .options-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="#" class="nav-brand" onclick="showScreen('home'); return false;">
+      <span>🐦</span>
+      <span>Big Year</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" onclick="showScreen('home'); return false;" id="navHome">Home</a>
+      <a href="#" class="nav-link" onclick="showScreen('directory'); return false;" id="navDirectory">Directory</a>
+      <a href="https://github.com/jacobjameson/big_year" target="_blank" class="nav-link">GitHub</a>
+    </div>
+  </nav>
+
+  <div class="home-screen" id="homeScreen">
+    <div class="hero">
+      <div class="hero-logo">🐦</div>
+      <h1 class="hero-title">Big Year</h1>
+      <p class="hero-subtitle">Track your birding life list like GitHub tracks commits. Visualize your journey, join the community.</p>
+    </div>
+    
+    <div class="options-grid">
+      <div class="option-card">
+        <div class="option-icon">📊</div>
+        <h2 class="option-title">Quick Visualization</h2>
+        <p class="option-desc">Upload your eBird CSV and instantly see your birding activity. Export as PNG to share.</p>
+        <label class="option-btn option-btn-primary">
+          <span>📁</span> Upload CSV
+          <input type="file" class="option-upload" id="quickUpload" accept=".csv">
+        </label>
+      </div>
+      
+      <div class="option-card">
+        <div class="option-icon">🔄</div>
+        <h2 class="option-title">Auto-Sync Profile</h2>
+        <p class="option-desc">Fork the repo and add your eBird credentials. Your profile updates automatically every day!</p>
+        <a href="https://github.com/jacobjameson/big_year#auto-sync-setup" target="_blank" class="option-btn option-btn-secondary">
+          <span>⚙️</span> Setup Guide
+        </a>
+      </div>
+    </div>
+    
+    <p class="browse-link" onclick="showScreen('directory')">Browse the birder directory →</p>
+  </div>
+
+  <div class="profile-screen" id="profileScreen">
+    <div class="profile-container" id="profileContainer">
+      <header class="profile-header">
+        <div class="avatar" id="avatar">🐦</div>
+        <div class="profile-info">
+          <div class="profile-name-row">
+            <h1 class="profile-name" id="profileName">Birder</h1>
+            <span class="profile-badge" id="profileBadge">2025</span>
+          </div>
+          <div class="profile-username" id="profileUsername">@birder</div>
+          <p class="profile-bio" id="profileBio">Tracking my birding journey.</p>
+          
+          <div class="profile-links" id="profileLinks">
+            <a href="#" class="profile-link" id="githubLink" style="display:none">
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              <span id="githubUsername">GitHub</span>
+            </a>
+            <span class="profile-link" id="locationLink" style="display:none">
+              <span>📍</span>
+              <span id="locationText">Location</span>
+            </span>
+          </div>
+          
+          <div class="stats-row">
+            <div class="stat">
+              <span>🪶</span>
+              <span class="stat-value" id="totalSpecies">0</span>
+              <span>species</span>
+            </div>
+            <div class="stat">
+              <span>📅</span>
+              <span class="stat-value" id="totalDays">0</span>
+              <span>birding days</span>
+            </div>
+            <div class="stat">
+              <span>📍</span>
+              <span class="stat-value" id="dateRange">-</span>
+            </div>
+          </div>
+          
+          <div class="profile-actions">
+            <button class="btn" onclick="openShareModal()">
+              <span>↗️</span> Share
+            </button>
+            <button class="btn" onclick="exportPNG()">
+              <span>📸</span> Export PNG
+            </button>
+            <button class="btn btn-success" onclick="downloadDataJSON()" id="downloadDataBtn" style="display:none">
+              <span>💾</span> Download data.json
+            </button>
+            <button class="btn" onclick="showScreen('home')">
+              <span>↩️</span> Back
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="contribution-section">
+        <div class="section-header">
+          <div class="section-title">
+            <strong id="yearSpeciesCount">0</strong> species spotted in <span id="selectedYearText">2025</span>
+          </div>
+          <div class="year-selector" id="yearSelector"></div>
+        </div>
+        <div class="graph-wrapper">
+          <svg class="contribution-graph" id="graph"></svg>
+        </div>
+        <div class="legend">
+          <a href="https://ebird.org" target="_blank" class="learn-link">Learn about eBird</a>
+          <span>Less</span>
+          <div class="legend-cell" style="background: var(--color-calendar-graph-day-bg)"></div>
+          <div class="legend-cell" style="background: var(--color-calendar-graph-day-L1-bg)"></div>
+          <div class="legend-cell" style="background: var(--color-calendar-graph-day-L2-bg)"></div>
+          <div class="legend-cell" style="background: var(--color-calendar-graph-day-L3-bg)"></div>
+          <div class="legend-cell" style="background: var(--color-calendar-graph-day-L4-bg)"></div>
+          <span>More</span>
+        </div>
+      </section>
+
+      <section class="activity-section">
+        <div class="activity-header">
+          <span>📝</span> Contribution activity
+        </div>
+        <div id="activityList"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="directory-screen" id="directoryScreen">
+    <div class="directory-container">
+      <div class="directory-header">
+        <h1>🌍 Birder Directory</h1>
+        <p>Stats update automatically every day. <a href="https://github.com/jacobjameson/big_year#join-the-community" target="_blank">Join the community →</a></p>
+      </div>
+      
+      <div class="directory-stats">
+        <div class="directory-stat">
+          <div class="directory-stat-value" id="dirTotalBirders">0</div>
+          <div class="directory-stat-label">Birders</div>
+        </div>
+        <div class="directory-stat">
+          <div class="directory-stat-value" id="dirTotalSpecies">0</div>
+          <div class="directory-stat-label">Total Species</div>
+        </div>
+      </div>
+      
+      <div class="directory-grid" id="directoryGrid"></div>
+      <p class="last-updated" id="lastUpdated"></p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="shareModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Share your profile</span>
+        <button class="modal-close" onclick="closeModal('shareModal')">×</button>
+      </div>
+      <div class="modal-actions">
+        <a href="#" class="modal-btn" id="shareTwitter" target="_blank">
+          <span class="modal-btn-icon">𝕏</span>
+          <span>Share on X / Twitter</span>
+        </a>
+        <button class="modal-btn" onclick="copyProfileLink()">
+          <span class="modal-btn-icon">🔗</span>
+          <span>Copy link</span>
+        </button>
+        <button class="modal-btn" onclick="exportPNG(); closeModal('shareModal');">
+          <span class="modal-btn-icon">📸</span>
+          <span>Download as PNG</span>
+        </button>
+      </div>
+      
+      <div class="modal-section" style="margin-top: 24px;">
+        <div class="modal-section-title">🔄 Want auto-sync?</div>
+        <p>Fork the repo and add your eBird credentials to GitHub Secrets. Your profile will update every day automatically!</p>
+        <a href="https://github.com/jacobjameson/big_year#auto-sync-setup" target="_blank" class="modal-btn">
+          <span class="modal-btn-icon">📖</span>
+          <span>View setup guide</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const profileConfig = {
+      name: "Jacob Jameson",
+      username: "jacobjameson",
+      bio: "Birder & naturalist tracking life list observations.",
+      avatarEmoji: "🐦",
+      github: "jacobjameson",
+      location: "Cambridge, MA"
+    };
+
+    // State
+    let observations = [];
+    let observationsByDate = new Map();
+    let selectedYear = new Date().getFullYear();
+    let availableYears = [];
+    let directoryData = [];
+    let isQuickVisualization = false;
+
+    // Today's date for comparison (no time component)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // ============================================
+    // Navigation
+    // ============================================
+    function showScreen(screen) {
+      document.getElementById('homeScreen').classList.remove('hidden');
+      document.getElementById('profileScreen').classList.remove('visible');
+      document.getElementById('directoryScreen').classList.remove('visible');
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      
+      if (screen === 'home') {
+        document.getElementById('homeScreen').classList.remove('hidden');
+        document.getElementById('navHome').classList.add('active');
+      } else if (screen === 'profile') {
+        document.getElementById('homeScreen').classList.add('hidden');
+        document.getElementById('profileScreen').classList.add('visible');
+        document.getElementById('navHome').classList.add('active');
+      } else if (screen === 'directory') {
+        document.getElementById('homeScreen').classList.add('hidden');
+        document.getElementById('directoryScreen').classList.add('visible');
+        document.getElementById('navDirectory').classList.add('active');
+        loadDirectory();
+      }
+    }
+
+    // ============================================
+    // Directory
+    // ============================================
+    async function loadDirectory() {
+      const grid = document.getElementById('directoryGrid');
+      grid.innerHTML = '<p style="color: var(--color-fg-muted)">Loading directory...</p>';
+      
+      try {
+        const response = await fetch('data/directory.json');
+        if (response.ok) {
+          directoryData = await response.json();
+        } else {
+          directoryData = [];
+        }
+      } catch (e) {
+        directoryData = [];
+      }
+      
+      renderDirectory();
+    }
+
+    function renderDirectory() {
+      const grid = document.getElementById('directoryGrid');
+      grid.innerHTML = '';
+      
+      document.getElementById('dirTotalBirders').textContent = directoryData.length;
+      document.getElementById('dirTotalSpecies').textContent = directoryData.reduce((sum, b) => sum + (b.species || 0), 0);
+      
+      directoryData.forEach((birder, index) => {
+        const card = document.createElement('a');
+        card.className = 'birder-card';
+        card.href = birder.profileUrl || '#';
+        card.target = '_blank';
+        card.innerHTML = `
+          <div class="birder-avatar">🐦</div>
+          <div class="birder-info">
+            <div class="birder-name">${birder.name}</div>
+            <div class="birder-username">@${birder.username}</div>
+            <div class="birder-stats"><strong>${birder.species || 0}</strong> species · ${birder.location || 'Earth'}</div>
+            ${index < 3 ? `<div class="birder-rank">#${index + 1} in directory</div>` : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      
+      const joinCard = document.createElement('a');
+      joinCard.className = 'birder-card';
+      joinCard.href = 'https://github.com/jacobjameson/big_year#join-the-community';
+      joinCard.target = '_blank';
+      joinCard.innerHTML = `
+        <div class="birder-avatar" style="background: var(--color-canvas-subtle); border: 2px dashed var(--color-border-default);">➕</div>
+        <div class="birder-info">
+          <div class="birder-name">Join the Directory</div>
+          <div class="birder-username">Fork & setup auto-sync</div>
+          <div class="birder-stats">Auto-updating stats!</div>
+        </div>
+      `;
+      grid.appendChild(joinCard);
+      
+      if (directoryData.length > 0 && directoryData[0].lastUpdated) {
+        const date = new Date(directoryData[0].lastUpdated);
+        document.getElementById('lastUpdated').textContent = `Last synced: ${date.toLocaleDateString()}`;
+      }
+    }
+
+    // ============================================
+    // File Upload & Parsing
+    // ============================================
+    document.getElementById('quickUpload').addEventListener('change', (e) => {
+      if (e.target.files[0]) {
+        isQuickVisualization = true;
+        processFile(e.target.files[0]);
+      }
+    });
+
+    function processFile(file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const data = parseEbirdData(results.data);
+          if (data.length > 0) loadData(data);
+          else alert('Could not parse CSV. Make sure it\'s an eBird life list export.');
+        }
+      });
+    }
+
+    /**
+     * Parse eBird date formats:
+     * - "14 Dec 2025" (life list export)
+     * - "2025-12-14" (ISO format)
+     * - "14-12-2025" (DD-MM-YYYY)
+     */
+    function parseDate(dateStr) {
+      if (!dateStr) return null;
+      dateStr = dateStr.trim();
+      
+      // Format: "14 Dec 2025"
+      const months = {
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+        'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+      };
+      
+      const ebirdMatch = dateStr.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+      if (ebirdMatch) {
+        const day = ebirdMatch[1].padStart(2, '0');
+        const month = months[ebirdMatch[2]];
+        const year = ebirdMatch[3];
+        if (month) return `${year}-${month}-${day}`;
+      }
+      
+      // Format: "2025-12-14" (ISO)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+      
+      // Format: "14-12-2025" (DD-MM-YYYY)
+      const ddmmyyyy = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (ddmmyyyy) {
+        return `${ddmmyyyy[3]}-${ddmmyyyy[2].padStart(2, '0')}-${ddmmyyyy[1].padStart(2, '0')}`;
+      }
+      
+      return null;
+    }
+
+    function parseEbirdData(rawData) {
+      const parsed = [];
+      
+      for (const row of rawData) {
+        // Handle both full eBird export and simplified format
+        const dateStr = row['Date'] || row['date'];
+        const sciName = row['Scientific Name'] || row['sciName'];
+        const common = row['Common Name'] || row['common'];
+        const location = row['Location'] || row['location'] || '';
+        const region = row['S/P'] || row['region'] || '';
+        
+        if (!dateStr || !sciName || !common) continue;
+        
+        const date = parseDate(dateStr);
+        if (!date || isNaN(new Date(date).getTime())) continue;
+        
+        parsed.push({ 
+          date, 
+          sciName, 
+          common,
+          location: location.replace(/"/g, ''),
+          region
+        });
+      }
+      
+      return parsed.sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    function loadData(data) {
+      observations = data;
+      observationsByDate = new Map();
+      observations.forEach(obs => {
+        if (!observationsByDate.has(obs.date)) observationsByDate.set(obs.date, []);
+        observationsByDate.get(obs.date).push(obs);
+      });
+      
+      const years = new Set(observations.map(o => new Date(o.date).getFullYear()));
+      availableYears = Array.from(years).sort((a, b) => b - a);
+      selectedYear = availableYears[0] || new Date().getFullYear();
+      
+      document.getElementById('downloadDataBtn').style.display = isQuickVisualization ? 'flex' : 'none';
+      
+      showScreen('profile');
+      updateProfile();
+      renderYearSelector();
+      drawGraph();
+      renderActivity();
+    }
+
+    // ============================================
+    // Data Export
+    // ============================================
+    function downloadDataJSON() {
+      const data = {
+        profile: {
+          name: profileConfig.name,
+          username: profileConfig.username
+        },
+        observations: observations,
+        exportedAt: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'data.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ============================================
+    // Profile
+    // ============================================
+    function updateProfile() {
+      document.getElementById('avatar').textContent = profileConfig.avatarEmoji;
+      document.getElementById('profileName').textContent = profileConfig.name;
+      document.getElementById('profileUsername').textContent = '@' + profileConfig.username;
+      document.getElementById('profileBio').textContent = profileConfig.bio;
+      
+      const uniqueSpecies = new Set(observations.map(o => o.sciName)).size;
+      document.getElementById('totalSpecies').textContent = uniqueSpecies;
+      document.getElementById('totalDays').textContent = observationsByDate.size;
+      document.getElementById('profileBadge').textContent = new Date().getFullYear();
+      
+      if (profileConfig.github) {
+        document.getElementById('githubLink').href = `https://github.com/${profileConfig.github}`;
+        document.getElementById('githubLink').style.display = 'flex';
+        document.getElementById('githubUsername').textContent = profileConfig.github;
+      }
+      
+      if (profileConfig.location) {
+        document.getElementById('locationLink').style.display = 'flex';
+        document.getElementById('locationText').textContent = profileConfig.location;
+      }
+      
+      if (observations.length > 0) {
+        const dates = observations.map(o => new Date(o.date));
+        const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        document.getElementById('dateRange').textContent = `${fmt(new Date(Math.min(...dates)))} – ${fmt(new Date(Math.max(...dates)))}`;
+      }
+    }
+
+    function renderYearSelector() {
+      const container = document.getElementById('yearSelector');
+      container.innerHTML = '';
+      availableYears.forEach(year => {
+        const btn = document.createElement('button');
+        btn.className = `year-btn ${year === selectedYear ? 'active' : ''}`;
+        btn.textContent = year;
+        btn.onclick = () => {
+          selectedYear = year;
+          document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          drawGraph();
+          updateYearStats();
+        };
+        container.appendChild(btn);
+      });
+      updateYearStats();
+    }
+
+    function updateYearStats() {
+      const yearObs = observations.filter(o => new Date(o.date).getFullYear() === selectedYear);
+      document.getElementById('yearSpeciesCount').textContent = new Set(yearObs.map(o => o.sciName)).size;
+      document.getElementById('selectedYearText').textContent = selectedYear;
+    }
+
+    // ============================================
+    // Contribution Graph
+    // ============================================
+    function drawGraph() {
+      const svg = d3.select('#graph');
+      svg.selectAll('*').remove();
+
+      const cellSize = 11, cellGap = 3, marginLeft = 28, marginTop = 20;
+      const startDate = new Date(selectedYear, 0, 1);
+      const endDate = new Date(selectedYear, 11, 31);
+      const weeks = d3.timeWeeks(d3.timeWeek.floor(startDate), d3.timeDay.offset(endDate, 1));
+      
+      const width = weeks.length * (cellSize + cellGap) + marginLeft + 10;
+      const height = 7 * (cellSize + cellGap) + marginTop + 10;
+      svg.attr('width', width).attr('height', height);
+
+      const colorScale = (count) => {
+        if (count === 0) return '#ebedf0';
+        if (count === 1) return '#9be9a8';
+        if (count === 2) return '#40c463';
+        if (count <= 4) return '#30a14e';
+        return '#216e39';
+      };
+
+      // Month labels
+      d3.timeMonths(startDate, endDate).forEach(d => {
+        svg.append('text')
+          .attr('class', 'month-label')
+          .attr('x', d3.timeWeek.count(d3.timeWeek.floor(startDate), d) * (cellSize + cellGap) + marginLeft)
+          .attr('y', 12)
+          .text(d3.timeFormat('%b')(d));
+      });
+
+      // Day labels
+      ['', 'Mon', '', 'Wed', '', 'Fri', ''].forEach((label, i) => {
+        svg.append('text')
+          .attr('class', 'day-label')
+          .attr('x', marginLeft - 6)
+          .attr('y', i * (cellSize + cellGap) + marginTop + cellSize - 1)
+          .attr('text-anchor', 'end')
+          .text(label);
+      });
+
+      // Contribution cells
+      d3.timeDays(startDate, d3.timeDay.offset(endDate, 1)).forEach(d => {
+        const dateStr = d3.timeFormat('%Y-%m-%d')(d);
+        const birds = observationsByDate.get(dateStr) || [];
+        const isFuture = d > today;
+        
+        const cell = svg.append('rect')
+          .attr('class', `contribution-cell ${isFuture ? 'future' : 'past'}`)
+          .attr('width', cellSize)
+          .attr('height', cellSize)
+          .attr('x', d3.timeWeek.count(d3.timeWeek.floor(startDate), d) * (cellSize + cellGap) + marginLeft)
+          .attr('y', d.getDay() * (cellSize + cellGap) + marginTop)
+          .attr('fill', isFuture ? '#ebedf0' : colorScale(birds.length));
+        
+        // Only add hover for past/present days
+        if (!isFuture) {
+          cell
+            .on('mouseenter', (event) => showTooltip(event, d, birds))
+            .on('mouseleave', hideTooltip);
+        }
+      });
+    }
+
+    // ============================================
+    // Tooltip
+    // ============================================
+    const tooltip = document.getElementById('tooltip');
+
+    function showTooltip(event, date, birds) {
+      let html = `<div class="tooltip-count">${birds.length === 0 ? 'No birds' : birds.length + ' species'} spotted</div>`;
+      html += `<div class="tooltip-date">${d3.timeFormat('%B %d, %Y')(date)}</div>`;
+      if (birds.length > 0) {
+        html += '<div class="tooltip-birds">';
+        birds.slice(0, 5).forEach(b => {
+          html += `<div class="tooltip-bird"><span class="bird-common">${b.common}</span> <span class="bird-sci">${b.sciName}</span></div>`;
+        });
+        if (birds.length > 5) html += `<div class="tooltip-bird" style="opacity:0.6">+${birds.length - 5} more</div>`;
+        html += '</div>';
+      }
+      tooltip.innerHTML = html;
+      tooltip.style.left = event.target.getBoundingClientRect().left + 'px';
+      tooltip.style.top = (event.target.getBoundingClientRect().top - 8) + 'px';
+      tooltip.style.transform = 'translate(-50%, -100%)';
+      tooltip.classList.add('visible');
+    }
+
+    function hideTooltip() { tooltip.classList.remove('visible'); }
+
+    // ============================================
+    // Activity
+    // ============================================
+    function renderActivity() {
+      const container = document.getElementById('activityList');
+      container.innerHTML = '';
+      
+      const byMonth = new Map();
+      Array.from(observationsByDate.entries())
+        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+        .slice(0, 15)
+        .forEach(([dateStr, birds]) => {
+          const monthKey = d3.timeFormat('%B %Y')(new Date(dateStr));
+          if (!byMonth.has(monthKey)) byMonth.set(monthKey, []);
+          byMonth.get(monthKey).push({ date: dateStr, birds });
+        });
+      
+      byMonth.forEach((entries, monthName) => {
+        const header = document.createElement('div');
+        header.className = 'activity-month';
+        header.textContent = monthName;
+        container.appendChild(header);
+        
+        entries.forEach(({ date, birds }) => {
+          const item = document.createElement('div');
+          item.className = 'activity-item';
+          item.innerHTML = `
+            <div class="activity-icon">🐦</div>
+            <div class="activity-content">
+              <div class="activity-title">Spotted ${birds.length} species</div>
+              <div class="activity-details">${birds.map(b => b.common).join(', ')}</div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      });
+    }
+
+    // ============================================
+    // Modals & Export
+    // ============================================
+    function openShareModal() {
+      const species = new Set(observations.map(o => o.sciName)).size;
+      const tweetText = encodeURIComponent(`I've spotted ${species} bird species! 🐦 Check out my birding profile on Big Year.`);
+      document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(window.location.href)}`;
+      document.getElementById('shareModal').classList.add('visible');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+
+    function copyProfileLink() {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied!');
+    }
+
+    function exportPNG() {
+      html2canvas(document.getElementById('profileContainer'), {
+        backgroundColor: '#f6f8fa',
+        scale: 2
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `birding-profile-${selectedYear}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    document.getElementById('shareModal').addEventListener('click', (e) => {
+      if (e.target.id === 'shareModal') closeModal('shareModal');
+    });
+
+    // ============================================
+    // Auto-load data.json
+    // ============================================
+    async function tryLoadDataJson() {
+      try {
+        const response = await fetch('data.json');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.observations && data.observations.length > 0) {
+            isQuickVisualization = false;
+            loadData(data.observations);
+          }
+        }
+      } catch (e) {
+        // No data.json
+      }
+    }
+
+    tryLoadDataJson();
+  </script>
+</body>
+</html>

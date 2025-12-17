@@ -1,0 +1,15 @@
+{
+  "name": "big-year",
+  "version": "1.0.0",
+  "description": "A GitHub-style contribution graph for birders",
+  "scripts": {
+    "fetch-ebird": "node scripts/fetch-ebird.js",
+    "sync-directory": "node scripts/sync-directory.js"
+  },
+  "keywords": ["birding", "ebird", "visualization", "github"],
+  "author": "Jacob Jameson",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
+}

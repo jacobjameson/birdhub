@@ -1,0 +1,45 @@
+{
+  "profile": {
+    "name": "Jacob Jameson",
+    "username": "jacobjameson",
+    "lastSync": "2025-12-16T00:00:00.000Z"
+  },
+  "observations": [
+    {
+      "date": "2024-11-03",
+      "sciName": "Thryothorus ludovicianus",
+      "common": "Carolina Wren",
+      "location": "Fresh Pond Golf Course, Cambridge US-MA",
+      "region": "US-MA"
+    },
+    {
+      "date": "2024-11-03",
+      "sciName": "Dryobates pubescens",
+      "common": "Downy Woodpecker",
+      "location": "Fresh Pond Golf Course, Cambridge US-MA",
+      "region": "US-MA"
+    },
+    {
+      "date": "2024-11-03",
+      "sciName": "Aythya collaris",
+      "common": "Ring-necked Duck",
+      "location": "Fresh Pond Golf Course, Cambridge US-MA",
+      "region": "US-MA"
+    },
+    {
+      "date": "2025-11-27",
+      "sciName": "Calypte anna",
+      "common": "Anna's Hummingbird",
+      "location": "3947 Gardenia Pl, Oakland US-CA",
+      "region": "US-CA"
+    },
+    {
+      "date": "2025-12-14",
+      "sciName": "Baeolophus bicolor",
+      "common": "Tufted Titmouse",
+      "location": "5155 Shady Oak Ln, Warrenton US-VA",
+      "region": "US-VA"
+    }
+  ],
+  "exportedAt": "2025-12-16T00:00:00.000Z"
+}
