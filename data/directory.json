@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "username": "jacobjameson",
+    "name": "Jacob Jameson",
+    "github": "jacobjameson",
+    "location": "Cambridge, MA",
+    "profileUrl": "https://jacobjameson.github.io/birdhub_profile_JJ",
+    "species": 5,
+    "speciesThisYear": 2,
+    "observations": 5,
+    "lastSighting": "2025-12-14",
+    "lastUpdated": "2025-12-18T02:43:41.504Z"
+  }
+]
