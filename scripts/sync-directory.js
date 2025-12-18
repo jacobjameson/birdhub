@@ -18,6 +18,13 @@ const BIRDER_REGISTRY = [
   //   location: "City, State",
   //   repo: "birdhub-profile",  // or your custom repo name
   // },
+  {
+  username: "jacobjameson",
+  name: "Jacob Jameson", 
+  github: "jacobjameson",
+  location: "Cambridge, MA",
+  repo: "birdhub_profile_JJ"  // or your custom repo name
+}
 ];
 
 async function fetchBirderData(birder) {
