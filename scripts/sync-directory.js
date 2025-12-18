@@ -15,7 +15,7 @@ const BIRDER_REGISTRY = [
     name: "Jacob Jameson",
     github: "jacobjameson",
     location: "Cambridge, MA",
-    repo: "birdhub_profile_jj",  // Can be birdhub, birdhub-profile, or custom
+    repo: "birdhub_profile_JJ",  // Can be birdhub, birdhub-profile, or custom
   },
   // Add more birders here!
   // {
