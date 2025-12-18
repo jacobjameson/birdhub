@@ -1,0 +1,28 @@
+# This is the ONLY workflow birdhub needs
+name: Sync Birder Directory
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-directory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Fetch and update directory
+        run: node scripts/sync-directory.js
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/directory.json
+          git diff --staged --quiet || git commit -m "🐦 Auto-update birder directory [skip ci]"
+          git push
