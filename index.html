@@ -297,6 +297,10 @@
         <div class="directory-stat"><div class="directory-stat-value" id="dirTotalBirders">0</div><div class="directory-stat-label">Birders</div></div>
         <div class="directory-stat"><div class="directory-stat-value" id="dirTotalSpecies">0</div><div class="directory-stat-label">Species Spotted</div></div>
       </div>
+      <div class="sort-controls" style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
+        <button class="year-btn active" id="sortAllTime" onclick="sortDirectory('allTime')">All Time</button>
+        <button class="year-btn" id="sortThisYear" onclick="sortDirectory('thisYear')">This Year</button>
+      </div>
       <div class="directory-grid" id="directoryGrid"></div>
       <p class="last-updated" id="lastUpdated"></p>
     </div>
@@ -346,7 +350,7 @@
   <div class="tooltip" id="tooltip"></div>
 
   <script>
-    let observations = [], observationsByDate = new Map(), selectedYear = new Date().getFullYear(), availableYears = [], userName = 'Birder', pendingData = null, directoryData = [], isHostedProfile = false, profileConfig = null, hostedData = null;
+    let observations = [], observationsByDate = new Map(), selectedYear = new Date().getFullYear(), availableYears = [], userName = 'Birder', pendingData = null, directoryData = [], isHostedProfile = false, profileConfig = null, hostedData = null, directorySortMode = 'allTime';
     const today = new Date(); today.setHours(0,0,0,0);
 
     function goHome() { showScreen('home'); }
@@ -368,36 +372,45 @@
       renderDirectory();
     }
 
+    function sortDirectory(mode) {
+      directorySortMode = mode;
+      document.getElementById('sortAllTime').classList.toggle('active', mode === 'allTime');
+      document.getElementById('sortThisYear').classList.toggle('active', mode === 'thisYear');
+      renderDirectory();
+    }
+
     function renderDirectory() {
       const grid = document.getElementById('directoryGrid'); grid.innerHTML = '';
       document.getElementById('dirTotalBirders').textContent = directoryData.length;
-      document.getElementById('dirTotalSpecies').textContent = directoryData.reduce((s,b) => s + (b.species||0), 0);
       
-      if (!directoryData.length) {
+      // Sort based on mode
+      let sorted = [...directoryData];
+      if (directorySortMode === 'thisYear') {
+        sorted.sort((a, b) => (b.speciesThisYear || 0) - (a.speciesThisYear || 0));
+        document.getElementById('dirTotalSpecies').textContent = sorted.reduce((s, b) => s + (b.speciesThisYear || 0), 0);
+      } else {
+        sorted.sort((a, b) => (b.species || 0) - (a.species || 0));
+        document.getElementById('dirTotalSpecies').textContent = sorted.reduce((s, b) => s + (b.species || 0), 0);
+      }
+      
+      if (!sorted.length) {
         grid.innerHTML = '<p style="color:var(--sand-500);grid-column:1/-1;text-align:center;padding:40px;">No birders yet. Be the first to join! 🐣</p>';
       }
       
-      directoryData.forEach((b,i) => {
+      sorted.forEach((b, i) => {
         const card = document.createElement('a'); 
         card.className = 'birder-card';
+        card.href = b.profileUrl;
+        card.target = '_blank';
         
-        // If this is the hosted profile, load it in-app
-        const isMe = hostedData && profileConfig && b.username === profileConfig.username;
-        if (isMe) {
-          card.href = '#';
-          card.onclick = (e) => { e.preventDefault(); loadHostedProfile(); };
-        } else {
-          card.href = b.profileUrl || `https://${b.username}.github.io/birdhub`; 
-          card.target = '_blank';
-        }
-        
+        const speciesCount = directorySortMode === 'thisYear' ? (b.speciesThisYear || 0) : (b.species || 0);
         const rankBadge = i < 3 ? `<span class="birder-rank">${['🥇','🥈','🥉'][i]} #${i+1}</span>` : '';
         card.innerHTML = `
           <div class="birder-avatar">🐦</div>
           <div class="birder-info">
             <div class="birder-name">${b.name || b.username}</div>
             <div class="birder-location">📍 ${b.location || 'Earth'}</div>
-            <div class="birder-stats"><strong>${b.species||0}</strong> species · ${b.observations||0} sightings</div>
+            <div class="birder-stats"><strong>${speciesCount}</strong> species${directorySortMode === 'thisYear' ? ' this year' : ''}</div>
             ${rankBadge}
           </div>`;
         grid.appendChild(card);

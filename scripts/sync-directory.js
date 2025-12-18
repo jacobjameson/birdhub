@@ -9,21 +9,14 @@ const fs = require('fs');
 const path = require('path');
 
 // Registry of birders - add yourself here via PR!
+// See CONTRIBUTING.md for instructions on joining the flock
 const BIRDER_REGISTRY = [
-  {
-    username: "jacobjameson",
-    name: "Jacob Jameson",
-    github: "jacobjameson",
-    location: "Cambridge, MA",
-    repo: "birdhub_profile_JJ",  // Can be birdhub, birdhub-profile, or custom
-  },
-  // Add more birders here!
   // {
-  //   username: "your-username",
+  //   username: "your-github-username",
   //   name: "Your Name",
-  //   github: "your-username",
+  //   github: "your-github-username",
   //   location: "City, State",
-  //   repo: "birdhub-profile",
+  //   repo: "birdhub-profile",  // or your custom repo name
   // },
 ];
 
@@ -52,10 +45,19 @@ async function fetchBirderData(birder) {
 
 function calculateStats(observations) {
   if (!observations || !Array.isArray(observations)) {
-    return { species: 0, observations: 0, lastSighting: null };
+    return { species: 0, speciesThisYear: 0, observations: 0, lastSighting: null };
   }
   
+  const currentYear = new Date().getFullYear();
   const uniqueSpecies = new Set(observations.map(o => o.sciName)).size;
+  
+  // Species seen this year
+  const thisYearObs = observations.filter(o => {
+    const year = new Date(o.date).getFullYear();
+    return year === currentYear;
+  });
+  const speciesThisYear = new Set(thisYearObs.map(o => o.sciName)).size;
+  
   const dates = observations.map(o => new Date(o.date)).filter(d => !isNaN(d));
   const lastSighting = dates.length > 0 
     ? new Date(Math.max(...dates)).toISOString().split('T')[0]
@@ -63,6 +65,7 @@ function calculateStats(observations) {
   
   return {
     species: uniqueSpecies,
+    speciesThisYear,
     observations: observations.length,
     lastSighting
   };
@@ -87,12 +90,13 @@ async function syncDirectory() {
       location: birder.location || null,
       profileUrl: `https://${birder.username}.github.io/${repo}`,
       species: stats.species,
+      speciesThisYear: stats.speciesThisYear,
       observations: stats.observations,
       lastSighting: stats.lastSighting,
       lastUpdated: new Date().toISOString()
     });
     
-    console.log(`  ✅ ${birder.name}: ${stats.species} species\n`);
+    console.log(`  ✅ ${birder.name}: ${stats.species} species (${stats.speciesThisYear} this year)\n`);
   }
   
   // Sort by species count (descending)
