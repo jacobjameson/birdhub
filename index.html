@@ -229,7 +229,7 @@
     </div>
     <div class="home-footer">
       <span class="home-footer-link" onclick="showScreen('directory')">🌍 Explore the flock</span>
-      <a href="https://github.com/jacobjameson/birdhub#auto-sync-setup" target="_blank" class="home-footer-link">✨ Create your own auto-updating profile</a>
+      <a href="https://github.com/jacobjameson/birdhub-profile" target="_blank" class="home-footer-link">✨ Create your own profile</a>
     </div>
     <div class="home-credit">
       Created by <a href="https://github.com/jacobjameson" target="_blank">Jacob Jameson</a>
@@ -291,7 +291,7 @@
     <div class="directory-container">
       <div class="directory-header">
         <h1>🌍 The <span>Flock</span></h1>
-        <p>Birders with auto-syncing profiles · Updated daily · <a href="https://github.com/jacobjameson/birdhub#auto-sync-setup" target="_blank">Join us!</a></p>
+        <p>Birders with auto-syncing profiles · Updated daily · <a href="https://github.com/jacobjameson/birdhub-profile" target="_blank">Join us!</a></p>
       </div>
       <div class="directory-stats">
         <div class="directory-stat"><div class="directory-stat-value" id="dirTotalBirders">0</div><div class="directory-stat-label">Birders</div></div>
@@ -338,7 +338,7 @@
       </div>
       <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--sand-100);" id="shareAutoSyncHint">
         <p style="font-size:13px;color:var(--sand-600);margin-bottom:12px;text-align:center;">Want to join the flock?</p>
-        <a href="https://github.com/jacobjameson/birdhub#auto-sync-setup" target="_blank" class="share-btn" style="justify-content:center;"><span>✨</span> Create auto-updating profile</a>
+        <a href="https://github.com/jacobjameson/birdhub-profile" target="_blank" class="share-btn" style="justify-content:center;"><span>✨</span> Create auto-updating profile</a>
       </div>
     </div>
   </div>
@@ -405,7 +405,7 @@
       
       const join = document.createElement('a'); 
       join.className = 'birder-card join-card'; 
-      join.href = 'https://github.com/jacobjameson/birdhub#auto-sync-setup'; 
+      join.href = 'https://github.com/jacobjameson/birdhub-profile'; 
       join.target = '_blank';
       join.innerHTML = `
         <div class="birder-avatar">➕</div>
@@ -610,6 +610,7 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal('nameModal'); closeModal('shareModal'); } });
 
     async function tryLoadProfile() {
+      // Check for local data.json (for the site owner's profile)
       try {
         const r = await fetch('data.json');
         if (r.ok) {

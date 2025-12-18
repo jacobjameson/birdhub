@@ -1,30 +1,35 @@
 /**
  * Sync Birder Directory
  * 
- * This script fetches data.json from each registered birder's GitHub Pages
- * and compiles an updated directory with fresh species counts.
- * 
- * Run via: node scripts/sync-directory.js
+ * Fetches data.json from each registered birder's profile repo
+ * and compiles the directory with fresh species counts.
  */
 
 const fs = require('fs');
 const path = require('path');
 
 // Registry of birders - add yourself here via PR!
-// Your fork must have a data.json file at the root
 const BIRDER_REGISTRY = [
   {
     username: "jacobjameson",
     name: "Jacob Jameson",
     github: "jacobjameson",
     location: "Cambridge, MA",
-    // Data will be fetched from: https://jacobjameson.github.io/birdhub/data.json
+    repo: "birdhub",  // Can be birdhub, birdhub-profile, or custom
   },
   // Add more birders here!
+  // {
+  //   username: "your-username",
+  //   name: "Your Name",
+  //   github: "your-username",
+  //   location: "City, State",
+  //   repo: "birdhub-profile",
+  // },
 ];
 
-async function fetchBirderData(username) {
-  const url = `https://${username}.github.io/birdhub/data.json`;
+async function fetchBirderData(birder) {
+  const repo = birder.repo || 'birdhub-profile';
+  const url = `https://${birder.username}.github.io/${repo}/data.json`;
   
   try {
     const response = await fetch(url, {
@@ -33,14 +38,14 @@ async function fetchBirderData(username) {
     });
     
     if (!response.ok) {
-      console.log(`  ⚠️  Could not fetch data for ${username} (${response.status})`);
+      console.log(`  ⚠️  Could not fetch data for ${birder.username} (${response.status})`);
       return null;
     }
     
     const data = await response.json();
     return data;
   } catch (error) {
-    console.log(`  ⚠️  Error fetching ${username}: ${error.message}`);
+    console.log(`  ⚠️  Error fetching ${birder.username}: ${error.message}`);
     return null;
   }
 }
@@ -71,15 +76,16 @@ async function syncDirectory() {
   for (const birder of BIRDER_REGISTRY) {
     console.log(`📡 Fetching data for @${birder.username}...`);
     
-    const data = await fetchBirderData(birder.username);
+    const data = await fetchBirderData(birder);
     const stats = calculateStats(data?.observations || data);
+    const repo = birder.repo || 'birdhub-profile';
     
     directory.push({
       username: birder.username,
       name: birder.name,
       github: birder.github,
       location: birder.location || null,
-      profileUrl: `https://${birder.username}.github.io/birdhub`,
+      profileUrl: `https://${birder.username}.github.io/${repo}`,
       species: stats.species,
       observations: stats.observations,
       lastSighting: stats.lastSighting,

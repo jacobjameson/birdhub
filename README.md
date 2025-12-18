@@ -10,15 +10,49 @@ A beautiful way to visualize and share your birding journey. Like GitHub for bir
 
 - 📊 **GitHub-style contribution graph** for your bird sightings
 - 🌍 **Flock directory** - see other birders and their stats
-- 🔄 **Auto-sync** - your profile updates daily from eBird
+- 🔄 **Auto-sync** - profiles update daily from eBird
 - 📸 **Export** - download beautiful PNG images to share
 - 📱 **Mobile-friendly** - looks great on any device
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Create Your Profile
 
-### Just want to visualize your data?
+### Quick Way: Use the Template
+
+1. Go to **[birdhub-profile](https://github.com/jacobjameson/birdhub-profile)**
+2. Click **"Use this template"** → **"Create new repository"**
+3. Follow the 5-minute setup in the README
+4. Your profile syncs from eBird daily!
+
+**Your profile will be at:** `https://YOUR-USERNAME.github.io/REPO-NAME`
+
+---
+
+## 🌍 Join the Flock
+
+Want to appear in the directory? After setting up your profile:
+
+1. Edit `scripts/sync-directory.js` in **this repo**
+2. Add yourself to `BIRDER_REGISTRY`:
+
+```javascript
+{
+  username: "your-github-username",
+  name: "Your Name", 
+  github: "your-github-username",
+  location: "City, State",
+  repo: "birdhub-profile"  // or your custom repo name
+}
+```
+
+3. Submit a Pull Request!
+
+---
+
+## 🎯 Just Want to Visualize?
+
+Don't want a permanent profile? Just use the homepage:
 
 1. Visit [jacobjameson.github.io/birdhub](https://jacobjameson.github.io/birdhub)
 2. Download your life list from [eBird](https://ebird.org/lifelist?r=world&time=life&fmt=csv)
@@ -27,91 +61,19 @@ A beautiful way to visualize and share your birding journey. Like GitHub for bir
 
 ---
 
-## 🔄 Auto-Sync Setup
-
-Want your own profile that updates automatically every day? Here's how:
-
-### Step 1: Fork the Repository
-
-Click **[Fork](https://github.com/jacobjameson/birdhub/fork)** to create your own copy.
-
-### Step 2: Add Your eBird Credentials
-
-Your credentials are stored securely as GitHub Secrets (encrypted, never visible).
-
-1. Go to **Settings** → **Secrets and variables** → **Actions**
-2. Add two secrets:
-
-| Name | Value |
-|------|-------|
-| `EBIRD_USERNAME` | Your eBird email |
-| `EBIRD_PASSWORD` | Your eBird password |
-
-### Step 3: Update Your Profile
-
-Edit `data.json` and update the profile section:
-
-```json
-{
-  "profile": {
-    "name": "Your Name",
-    "username": "your-github-username",
-    "github": "your-github-username",
-    "location": "City, State"
-  }
-}
-```
-
-### Step 4: Enable GitHub Pages
-
-1. Go to **Settings** → **Pages**
-2. Source: **Deploy from a branch**
-3. Branch: **main** / **(root)**
-4. Click **Save**
-
-### Step 5: You're Done! 🎉
-
-Your profile is live at: `https://your-username.github.io/birdhub`
-
-The GitHub Action syncs your eBird data daily at 7am UTC.
-
----
-
-## 🌍 Join the Flock
-
-Want to appear in the [Birder Directory](https://jacobjameson.github.io/birdhub)?
-
-1. Complete the auto-sync setup above
-2. Edit `scripts/sync-directory.js` in the **main repo**
-3. Add yourself to `BIRDER_REGISTRY`:
-
-```javascript
-{
-  username: "your-github-username",
-  name: "Your Name",
-  github: "your-github-username",
-  location: "City, State"
-}
-```
-
-4. Submit a Pull Request!
-
----
-
 ## 📁 Project Structure
 
 ```
-birdhub/
-├── index.html              # Main app
-├── data.json               # Your bird data
-├── data/
-│   └── directory.json      # Flock directory
-├── scripts/
-│   ├── fetch-ebird.js      # eBird scraper
-│   └── sync-directory.js   # Directory sync
-└── .github/workflows/
-    ├── sync-ebird.yml      # Daily eBird sync
-    └── sync-directory.yml  # Daily directory sync
+birdhub/                    # Main app (this repo)
+├── index.html              # Full app with directory + CSV upload
+├── data/directory.json     # Auto-updated flock directory
+└── scripts/
+    └── sync-directory.js   # Fetches stats from all birders
+
+birdhub-profile/            # Template for user profiles
+├── index.html              # Standalone profile page
+├── data.json               # User's bird data
+└── fetch-ebird.js          # eBird sync script
 ```
 
 ---
@@ -121,26 +83,6 @@ birdhub/
 - ✅ Credentials are **encrypted** as GitHub Secrets
 - ✅ Your data stays in **your repo**
 - ✅ **Open source** - review the code yourself!
-
----
-
-## 🔄 Automatic Updates
-
-Your fork automatically stays updated with new BirdHub features!
-
-**How it works:**
-- A weekly GitHub Action syncs new features from the main repo
-- Your `data.json` (your birds) is **never touched**
-- New features like badges, themes, etc. just appear!
-
-**Files that auto-update:**
-- `index.html` (the app)
-- `scripts/fetch-ebird.js` (eBird sync)
-- `README.md` (documentation)
-
-**Files that are yours:**
-- `data.json` (your bird data)
-- Your GitHub Secrets (credentials)
 
 ---
 
@@ -155,13 +97,10 @@ Your fork automatically stays updated with new BirdHub features!
 
 ## 💚 Contributing
 
-We'd love your help! Check out [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Ideas welcome:
+Ideas welcome! Open an issue or PR:
 - 🐛 Bug fixes
-- ✨ New features
+- ✨ New features (badges, themes, etc.)
 - 🎨 Design improvements
-- 📖 Documentation
 
 ---
 
@@ -172,5 +111,6 @@ MIT - Fork it, customize it, make it yours!
 ---
 
 <p align="center">
+  Created by <a href="https://github.com/jacobjameson">Jacob Jameson</a><br>
   <i>Happy birding! 🐦🌿</i>
 </p>
